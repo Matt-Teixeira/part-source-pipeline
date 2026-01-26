@@ -7,3 +7,4 @@ deltaStore
 migrationQueries/
 *.pem
 hca-odata-example.js
+/utils
