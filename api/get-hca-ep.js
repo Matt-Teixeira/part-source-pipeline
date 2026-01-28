@@ -11,7 +11,7 @@ const get_hca_ep_data = async (run_log) => {
   const odate_url = process.env.HCA_URI;
   try {
     const res = await axios.get(odate_url, {
-      // Axios will build the Basic Authorization header for you
+      // Axios will build the Basic Authorization header
       auth: {
         username: process.env.PROD_LOGIN_NAME, // e.g. "admin" or "admin@TenantName"
         password: process.env.PROD_LOGIN_PW

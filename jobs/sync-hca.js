@@ -31,9 +31,9 @@ const sync_hca = async (run_log) => {
 
     return result;
   } catch (error) {
-    console.log(error);
     await addLogEvent(E, run_log, "sync_hca", cat, null, error);
     console.error("OData error:", error.response?.status, error.response?.data);
+    console.error(error);
   }
 };
 
