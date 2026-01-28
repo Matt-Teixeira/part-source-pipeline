@@ -1,3 +1,3 @@
-INSERT INTO api.hca_odata (hca_data, clean_hca_data)
+INSERT INTO api.hca_odata (raw_payload, clean_payload)
 VALUES ($1, $2)
-RETURNING id, capture_datetime;
+RETURNING capture_datetime;

@@ -22,7 +22,6 @@ const sync_hca = async (run_log) => {
       "sync_hca",
       det,
       {
-        inserted_id: result.id,
         capture_datetime: result.capture_datetime,
         record_count: hca_values.length
       },
