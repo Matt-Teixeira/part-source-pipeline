@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "hca_sync": "node index.js hca_sync"
+    "hca_sync": "node index.js hca_sync",
+    "send_csv_sftp": "node index.js send_csv_sftp",
+    "inv_feed_sync": "node index.js inv_feed_sync"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +17,7 @@
     "dotenv": "^17.2.3",
     "pg-promise": "^12.3.0",
     "short-uuid": "^6.0.3",
+    "ssh2-sftp-client": "^12.0.1",
     "uuid": "^8.3.2"
   }
 }

@@ -2,7 +2,7 @@
 require("dotenv").config();
 
 // #JOBS
-const { sync_hca } = require("./jobs");
+const { sync_hca, send_csv_sftp, sync_inv_feed } = require("./jobs");
 
 const [
   addLogEvent,
@@ -21,6 +21,12 @@ const run_job = async (run_log, job_type) => {
     switch (job_type) {
       case "hca_sync":
         await sync_hca(run_log);
+        break;
+      case "send_csv_sftp":
+        await send_csv_sftp(run_log);
+        break;
+      case "inv_feed_sync":
+        await sync_inv_feed(run_log);
         break;
       default:
         break;

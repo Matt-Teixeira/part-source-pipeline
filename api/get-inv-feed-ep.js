@@ -6,12 +6,10 @@ const {
   tag: { cal, det, cat }
 } = require("../utils/logger/enums");
 
-const get_hca_ep_data = async (run_log) => {
-  await addLogEvent(I, run_log, "get_hca_ep_data", cal, null, null);
-  const odate_url = process.env.HCA_URI;
+const get_inv_feed_data = async (run_log, endpoint_url) => {
+  await addLogEvent(I, run_log, "get_inv_feed_data", cal, null, null);
   try {
-    const res = await axios.get(odate_url, {
-      // Axios builds the Basic Authorization header
+    const res = await axios.get(endpoint_url, {
       auth: {
         username: process.env.PROD_LOGIN_NAME,
         password: process.env.PROD_LOGIN_PW
@@ -24,17 +22,17 @@ const get_hca_ep_data = async (run_log) => {
     await addLogEvent(
       I,
       run_log,
-      "get_hca_ep_data",
+      "get_inv_feed_data",
       det,
-      { res: res.data },
+      { record_count: res.data?.value?.length },
       null
     );
 
     return res.data;
   } catch (error) {
-    await addLogEvent(E, run_log, "get_hca_ep_data", cat, null, error);
+    await addLogEvent(E, run_log, "get_inv_feed_data", cat, null, error);
     console.error("OData error:", error.response?.status, error.response?.data);
   }
 };
 
-module.exports = get_hca_ep_data;
+module.exports = get_inv_feed_data;
