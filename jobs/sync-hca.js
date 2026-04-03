@@ -14,7 +14,12 @@ const sync_hca = async (run_log) => {
     const hca_ep_data = await get_hca_ep_data(run_log);
 
     const hca_values = hca_ep_data.value;
-    const result = await insertHcaOdata(hca_values);
+
+    const trimmed_values = hca_values.map(
+      ({ Model_2, AddressID, CustomerID_2, AccountID, LocationID, ...rest }) => rest
+    );
+
+    const result = await insertHcaOdata(trimmed_values);
 
     await addLogEvent(
       I,
@@ -23,7 +28,7 @@ const sync_hca = async (run_log) => {
       det,
       {
         capture_datetime: result.capture_datetime,
-        record_count: hca_values.length
+        record_count: trimmed_values.length
       },
       null
     );
