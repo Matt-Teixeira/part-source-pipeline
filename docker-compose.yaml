@@ -1,0 +1,31 @@
+services:
+  app:
+    image: psp:svc
+    build:
+      context: .
+      args:
+        SVC_UID: 104
+        DOCKER_GID: 990
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      RUN_USER: svc
+      NPM_CONFIG_CACHE: /tmp/.npm
+    working_dir: /workspace
+    volumes:
+      # Project source - live edits on host reflect in container
+      - ./:/workspace
+
+      # Persistent node_modules cache (survives container removal)
+      - /opt/resources/node_mod_cache/part-source-pipeline:/workspace/node_modules
+
+      # Centralized run logs
+      - /opt/run-logs/part-source-pipeline:/opt/run-logs/part_source_pipeline
+    networks:
+      - pg_net
+
+networks:
+  pg_net:
+    external: true
