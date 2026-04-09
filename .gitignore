@@ -8,3 +8,4 @@ migrationQueries/
 *.pem
 hca-odata-example.js
 /utils
+/files
