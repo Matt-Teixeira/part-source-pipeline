@@ -6,15 +6,15 @@ const {
   tag: { cal, det, cat }
 } = require("../utils/logger/enums");
 
-const get_hca_ep_data = async (run_log) => {
-  await addLogEvent(I, run_log, "get_hca_ep_data", cal, null, null);
-  const odate_url = process.env.HCA_URI;
+const get_hca_ep_data = async (run_log, odata_url, label) => {
+  const action = `get_hca_ep_data:${label}`;
+  await addLogEvent(I, run_log, action, cal, null, null);
   try {
     const credentials = Buffer.from(
       `${process.env.PROD_LOGIN_NAME}:${process.env.PROD_LOGIN_PW}`
     ).toString("base64");
 
-    const res = await fetch(odate_url, {
+    const res = await fetch(odata_url, {
       headers: {
         Accept: "application/json",
         Authorization: `Basic ${credentials}`
@@ -33,7 +33,7 @@ const get_hca_ep_data = async (run_log) => {
     await addLogEvent(
       I,
       run_log,
-      "get_hca_ep_data",
+      action,
       det,
       { res: data },
       null
@@ -41,8 +41,9 @@ const get_hca_ep_data = async (run_log) => {
 
     return data;
   } catch (error) {
-    await addLogEvent(E, run_log, "get_hca_ep_data", cat, null, error);
+    await addLogEvent(E, run_log, action, cat, null, error);
     console.error("OData error:", error.response?.status, error.response?.data);
+    throw error;
   }
 };
 

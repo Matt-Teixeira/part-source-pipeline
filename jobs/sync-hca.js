@@ -11,10 +11,15 @@ const sync_hca = async (run_log) => {
   await addLogEvent(I, run_log, "sync_hca", cal, null, null);
 
   try {
-    const hca_ep_data = await get_hca_ep_data(run_log);
+    const [equipment_ep_data, tech_ep_data] = await Promise.all([
+      get_hca_ep_data(run_log, process.env.HCA_URI, "equipment"),
+      get_hca_ep_data(run_log, process.env.HCA_TECH, "tech_support")
+    ]);
 
-    const hca_values = hca_ep_data.value;
-    const result = await insertHcaOdata(hca_values);
+    const equipment_values = equipment_ep_data.value;
+    const tech_values = tech_ep_data.value;
+
+    const result = await insertHcaOdata(equipment_values, tech_values);
 
     await addLogEvent(
       I,
@@ -23,7 +28,8 @@ const sync_hca = async (run_log) => {
       det,
       {
         capture_datetime: result.capture_datetime,
-        record_count: hca_values.length
+        equipment_count: equipment_values.length,
+        tech_support_count: tech_values.length
       },
       null
     );

@@ -14,17 +14,21 @@ const trimStrings = (obj) => {
 };
 
 /**
- * Insert HCA OData value array into api.hca_odata table
+ * Insert HCA OData value arrays (equipment + tech support) into api.hca_odata
  *
- * @param {Array} hcaData - The value array from HCA OData response
- * @returns {Promise<{id: number, capture_datetime: string}>}
+ * @param {Array} equipmentData   - value array from HCA_URI endpoint
+ * @param {Array} techSupportData - value array from HCA_TECH endpoint
+ * @returns {Promise<{capture_datetime: string}>}
  */
-const insertHcaOdata = async (hcaData) => {
+const insertHcaOdata = async (equipmentData, techSupportData) => {
   try {
-    const cleanData = trimStrings(hcaData);
+    const cleanEquipment = trimStrings(equipmentData);
+    const cleanTechSupport = trimStrings(techSupportData);
     return db.one(insert_hca_odata, [
-      JSON.stringify(hcaData),
-      JSON.stringify(cleanData)
+      JSON.stringify(equipmentData),
+      JSON.stringify(cleanEquipment),
+      JSON.stringify(techSupportData),
+      JSON.stringify(cleanTechSupport)
     ]);
   } catch (error) {
     console.log(error);
