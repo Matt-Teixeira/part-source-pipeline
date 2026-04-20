@@ -19,7 +19,10 @@ const sync_hca = async (run_log) => {
     const equipment_values = equipment_ep_data.value.map(
       ({ Model_2, AddressID, CustomerID_2, AccountID, LocationID, ...rest }) => rest
     );
-    const tech_values = tech_ep_data.value;
+    const tech_values = tech_ep_data.value.map(
+      ({ CaseID, EquipmentID, SupportCategory, Subject, AccountName, ContactName, ContactEMail, ContactPhone, CreatedOn }) =>
+        ({ CaseID, EquipmentID, SupportCategory, Subject, AccountName, ContactName, ContactEMail, ContactPhone, CreatedOn })
+    );
 
     const result = await insertHcaOdata(equipment_values, tech_values);
 
