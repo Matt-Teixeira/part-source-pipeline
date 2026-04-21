@@ -42,8 +42,8 @@ const INV_FEED_2_COLUMN_MAP = [
 ];
 
 const FEEDS = [
-  { name: "inv_feed", envVar: "INV_FEED_AHS_DEV_1", filename: "Avante_Biomed_Inventory.csv", columnMap: INV_FEED_COLUMN_MAP },
-  { name: "inv_feed_2", envVar: "INV_FEED_AHS_DEV_2", filename: "Avante_Imaging_Inventory.csv", columnMap: INV_FEED_2_COLUMN_MAP }
+  { name: "inv_feed", envVar: "INV_FEED", filename: "Avante_Biomed_Inventory.csv", columnMap: INV_FEED_COLUMN_MAP },
+  { name: "inv_feed_2", envVar: "INV_FEED_2", filename: "Avante_Imaging_Inventory.csv", columnMap: INV_FEED_2_COLUMN_MAP }
 ];
 
 function cleanValue(val) {
@@ -112,7 +112,7 @@ const sync_inv_feed = async (run_log) => {
         });
 
         const remotePath = `./${filename}`;
-        await sftp.put(localPath, remotePath);
+        // await sftp.put(localPath, remotePath);
 
         await addLogEvent(I, run_log, "sync_inv_feed", det, {
           message: "CSV uploaded successfully",
