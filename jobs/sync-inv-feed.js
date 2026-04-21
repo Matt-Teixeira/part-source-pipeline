@@ -112,7 +112,7 @@ const sync_inv_feed = async (run_log) => {
         });
 
         const remotePath = `./${filename}`;
-        // await sftp.put(localPath, remotePath);
+        await sftp.put(localPath, remotePath);
 
         await addLogEvent(I, run_log, "sync_inv_feed", det, {
           message: "CSV uploaded successfully",
