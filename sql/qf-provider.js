@@ -13,22 +13,21 @@ const trimStrings = (obj) => {
   return obj;
 };
 
-/**
- * Insert HCA OData value arrays (equipment + tech support) into api.hca_odata
- *
- * @param {Array} equipmentData   - value array from HCA_URI endpoint
- * @param {Array} techSupportData - value array from HCA_TECH endpoint
- * @returns {Promise<{capture_datetime: string}>}
- */
-const insertHcaOdata = async (equipmentData, techSupportData) => {
+const insertHcaOdata = async (equipmentData, techSupportData, invoiceData, contractDetailsData) => {
   try {
     const cleanEquipment = trimStrings(equipmentData);
     const cleanTechSupport = trimStrings(techSupportData);
+    const cleanInvoice = trimStrings(invoiceData);
+    const cleanContractDetails = trimStrings(contractDetailsData);
     return db.one(insert_hca_odata, [
       JSON.stringify(equipmentData),
       JSON.stringify(cleanEquipment),
       JSON.stringify(techSupportData),
-      JSON.stringify(cleanTechSupport)
+      JSON.stringify(cleanTechSupport),
+      JSON.stringify(invoiceData),
+      JSON.stringify(cleanInvoice),
+      JSON.stringify(contractDetailsData),
+      JSON.stringify(cleanContractDetails)
     ]);
   } catch (error) {
     console.log(error);
