@@ -9,41 +9,9 @@ const {
   tag: { cal, det, cat, seq }
 } = require("../utils/logger/enums");
 
-// Column mapping: JSON key -> CSV header
-const INV_FEED_COLUMN_MAP = [
-  { key: "ItemNumberorderableSKU", header: "Item Number (orderable SKU)" },
-  { key: "Vendor", header: "Vendor" },
-  { key: "QOH", header: "QOH" },
-  { key: "StockYN", header: "Stock: Y/N" },
-  { key: "LeadTimeEstimatedShipDateBusinessDays", header: "Lead Time / Estimated Ship Date (business Days)" },
-  { key: "ConditionCodeNewOEMOriginalNewAftermarketRefurbished", header: "Condition Code (New OEM Original; New Aftermarket; Refurbished)" },
-  { key: "Warehouse", header: "Warehouse" }
-];
-
-const INV_FEED_2_COLUMN_MAP = [
-  { key: "ItemNumber", header: "Item Number" },
-  { key: "Vendor", header: "Vendor" },
-  { key: "OEM", header: "OEM" },
-  { key: "PartDescription", header: "Part Description" },
-  { key: "ListPrice", header: "List Price" },
-  { key: "OutrightCosttoPartsSource", header: "Outright Cost to PartsSource" },
-  { key: "ExchangeCost", header: "Exchange Cost" },
-  { key: "CoreCharge", header: "Core Charge" },
-  { key: "UOM", header: "UOM" },
-  { key: "QTYUOM", header: "QTY / UOM" },
-  { key: "ConditionCode", header: "Condition Code" },
-  { key: "StockYN", header: "Stock: Y/N" },
-  { key: "QOH", header: "QOH" },
-  { key: "LeadTime", header: "Lead Time" },
-  { key: "SystemManufacturer", header: "System Manufacturer" },
-  { key: "CompatibleModels", header: "Compatible Models" },
-  { key: "ManufacturedYear", header: "Manufactured Year" },
-  { key: "Usage", header: "Usage" }
-];
-
 const FEEDS = [
-  { name: "inv_feed", envVar: "INV_FEED", filename: "Avante_Biomed_Inventory.csv", columnMap: INV_FEED_COLUMN_MAP },
-  { name: "inv_feed_2", envVar: "INV_FEED_2", filename: "Avante_Imaging_Inventory.csv", columnMap: INV_FEED_2_COLUMN_MAP }
+  { name: "inv_feed", envVar: "INV_FEED", filename: "Avante_Biomed_Inventory.csv" },
+  { name: "inv_feed_2", envVar: "INV_FEED_2", filename: "Avante_Imaging_Inventory.csv" }
 ];
 
 function cleanValue(val) {
@@ -58,12 +26,21 @@ function escapeField(val) {
   return val;
 }
 
-function jsonToCsv(data, columnMap) {
-  const headerRow = columnMap.map((col) => escapeField(col.key)).join(",");
+function jsonToCsv(data) {
+  const headers = [];
+  const seen = new Set();
+  for (const record of data) {
+    for (const key of Object.keys(record)) {
+      if (!seen.has(key)) {
+        seen.add(key);
+        headers.push(key);
+      }
+    }
+  }
+
+  const headerRow = headers.map(escapeField).join(",");
   const rows = data.map((record) =>
-    columnMap
-      .map((col) => escapeField(cleanValue(record[col.key])))
-      .join(",")
+    headers.map((key) => escapeField(cleanValue(record[key]))).join(",")
   );
   return [headerRow, ...rows].join("\n");
 }
@@ -90,8 +67,8 @@ const sync_inv_feed = async (run_log) => {
         continue;
       }
 
-      // 2. Convert to CSV with column mapping and cleaning
-      const csvContent = jsonToCsv(response.value, feed.columnMap);
+      // 2. Convert to CSV
+      const csvContent = jsonToCsv(response.value);
       const filename = feed.filename;
       const localPath = path.resolve(__dirname, "../files", filename);
       fs.writeFileSync(localPath, csvContent, "utf-8");
