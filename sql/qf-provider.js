@@ -13,12 +13,13 @@ const trimStrings = (obj) => {
   return obj;
 };
 
-const insertHcaOdata = async (equipmentData, techSupportData, invoiceData, contractDetailsData) => {
+const insertHcaOdata = async (equipmentData, techSupportData, invoiceData, contractDetailsData, srvOrderDetailsData) => {
   try {
     const cleanEquipment = trimStrings(equipmentData);
     const cleanTechSupport = trimStrings(techSupportData);
     const cleanInvoice = trimStrings(invoiceData);
     const cleanContractDetails = trimStrings(contractDetailsData);
+    const cleanSrvOrderDetails = trimStrings(srvOrderDetailsData);
     return db.one(insert_hca_odata, [
       JSON.stringify(equipmentData),
       JSON.stringify(cleanEquipment),
@@ -27,7 +28,9 @@ const insertHcaOdata = async (equipmentData, techSupportData, invoiceData, contr
       JSON.stringify(invoiceData),
       JSON.stringify(cleanInvoice),
       JSON.stringify(contractDetailsData),
-      JSON.stringify(cleanContractDetails)
+      JSON.stringify(cleanContractDetails),
+      JSON.stringify(srvOrderDetailsData),
+      JSON.stringify(cleanSrvOrderDetails)
     ]);
   } catch (error) {
     console.log(error);
