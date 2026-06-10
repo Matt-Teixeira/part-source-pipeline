@@ -8,5 +8,5 @@ migrationQueries/
 *.pem
 hca-odata-example.js
 /utils
-/files
+files/
 *.csv
