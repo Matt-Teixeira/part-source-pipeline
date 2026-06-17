@@ -6,6 +6,6 @@ db/backup/*.tar
 deltaStore
 migrationQueries/
 *.pem
+*.crt
 hca-odata-example.js
-/utils
-/files
+files/
