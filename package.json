@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "test": "node --test",
     "hca_sync": "node index.js hca_sync",
     "send_csv_sftp": "node index.js send_csv_sftp",
     "inv_feed_sync": "node index.js inv_feed_sync"
