@@ -16,7 +16,7 @@ const sync_hca = async (run_log) => {
       get_hca_ep_data(run_log, process.env.HCA_TECH, "tech_support"),
       get_hca_ep_data(run_log, process.env.HCA_INVOICE, "invoice"),
       get_hca_ep_data(run_log, process.env.HCA_CONTRACT_DETAILS, "contract_details"),
-      get_hca_ep_data(run_log, process.env.HCA_SRV_ORDER_DETAILS, "srv_order_details")
+      get_hca_ep_data(run_log, process.env.HCA_SERVICE_DATA, "srv_order_details")
     ]);
 
     const equipment_values = equipment_ep_data.value.map(
