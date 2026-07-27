@@ -1,11 +1,11 @@
 services:
   app:
-    image: psp:svc
+    image: psp:staging
     build:
       context: .
       args:
-        SVC_UID: 104
-        DOCKER_GID: 990
+        SVC_UID: 105
+        DOCKER_GID: 987
     env_file:
       - .env
     extra_hosts:
@@ -21,7 +21,10 @@ services:
       # Persistent node_modules cache (survives container removal)
       - /opt/resources/node_mod_cache/part-source-pipeline:/workspace/node_modules
 
-      # Centralized run logs
+      # Centralized run logs. The hyphen/underscore difference is intentional:
+      # the host dir follows the repo name (part-source-pipeline), while the
+      # container path must match APP_NAME=part_source_pipeline because the
+      # logger writes to /opt/run-logs/${APP_NAME}/ (utils/logger/log.js).
       - /opt/run-logs/part-source-pipeline:/opt/run-logs/part_source_pipeline
     networks:
       - pg_net
