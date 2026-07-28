@@ -6,7 +6,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 # Match host docker group GID so bind-mounted files are accessible
-ARG DOCKER_GID=990
+ARG DOCKER_GID=987
 
 RUN set -eux; \
     if getent group docker >/dev/null; then \
@@ -16,7 +16,7 @@ RUN set -eux; \
     fi
 
 # Create svc user with host-matching UID in docker group
-ARG SVC_UID=104
+ARG SVC_UID=105
 RUN useradd -m -u "${SVC_UID}" -g docker -s /bin/bash svc
 
 # Cooperative umask for all shell types
