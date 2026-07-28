@@ -9,3 +9,4 @@ migrationQueries/
 *.crt
 hca-odata-example.js
 files/
+*.csv
