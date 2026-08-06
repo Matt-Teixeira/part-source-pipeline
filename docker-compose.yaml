@@ -1,11 +1,15 @@
 services:
   app:
-    image: psp:staging
+    image: psp:${IMAGE_TAG}
     build:
       context: .
+      # Host identity comes from .env so this file stays host-agnostic and the
+      # dev and staging branches can share it. See .env.example.
       args:
-        SVC_UID: 105
-        DOCKER_GID: 987
+        DOCKER_GID: ${DOCKER_GID}
+        UID_0: ${UID_0}
+        UID_1: ${UID_1}
+        UID_2: ${UID_2}
     env_file:
       - .env
     extra_hosts:
