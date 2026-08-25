@@ -111,8 +111,48 @@ const deriveOutcome = (run_log, fatal_error) => {
   };
 };
 
+// GRACEFUL SHUTDOWN (SIGTERM/SIGINT). gosu EXECS node, SO node IS PID 1 AND
+// RECEIVES THE SIGNAL DIRECTLY. WITHOUT THESE, A KILLED RUN LEAVES A 0-BYTE
+// FILE LOG AND NO util.app_run_logs ROW — ZERO DIAGNOSTICS EXACTLY WHEN YOU
+// NEED THEM (PILOT LESSON, VERIFIED WITH A REAL KILL TEST).
+//   - FLUSH-ONCE GUARD: A SECOND SIGNAL WHILE FLUSHING IS IGNORED.
+//   - IF on_boot's finally HAS ALREADY STARTED FINALIZING, DO NOT COMPETE —
+//     LET IT COMPLETE (ITS FAILSAFE TIMER BOUNDS THE WAIT).
+//   - EXIT IS HONESTLY NON-ZERO: A KILLED RUN IS A FAILED RUN.
+let active_run_log = null;
+let run_finalized = false;
+let shutdown_started = false;
+const gracefulShutdown = async (signal) => {
+  if (shutdown_started) return;
+  shutdown_started = true;
+  console.error(`[run_outcome] received ${signal} — flushing run log before exit`);
+  if (run_finalized || !active_run_log) {
+    if (run_finalized) {
+      console.error(`[run_outcome] finalize already in progress; letting it complete`);
+      return;
+    }
+    process.exit(EXIT.FAILED);
+  }
+  try {
+    const err = new Error(`Run killed by ${signal}`);
+    err.code = "E_SIGNAL";
+    await addLogEvent(E, active_run_log, "gracefulShutdown", cat, { signal }, err);
+    const outcome = deriveOutcome(active_run_log, err);
+    await addLogEvent(I, active_run_log, "run_outcome", det, outcome, null);
+    await dbInsertLogEvents(pgp, active_run_log);
+    await writeLogEvents(active_run_log);
+  } catch (e) {
+    console.error(`[run_outcome] shutdown flush failed: ${e.message || e}`);
+  } finally {
+    process.exit(EXIT.FAILED);
+  }
+};
+process.on("SIGTERM", () => { gracefulShutdown("SIGTERM"); });
+process.on("SIGINT", () => { gracefulShutdown("SIGINT"); });
+
 const on_boot = async () => {
   const run_log = await makeAppRunLog();
+  active_run_log = run_log;
 
   const job_type = process.argv[2];
 
@@ -149,6 +189,9 @@ const on_boot = async () => {
     console.error(error);
     await addLogEvent(E, run_log, "on_boot", cat, null, error);
   } finally {
+    // FROM HERE ON, THE SIGNAL HANDLER STANDS DOWN (SEE gracefulShutdown).
+    run_finalized = true;
+
     // 1) DECIDE THE OUTCOME AND SET THE (HONEST) EXIT CODE. NEVER process.exit():
     //    process.exitCode LETS PENDING I/O FLUSH AND THE LOOP DRAIN NATURALLY.
     const outcome = deriveOutcome(run_log, fatal_error);
