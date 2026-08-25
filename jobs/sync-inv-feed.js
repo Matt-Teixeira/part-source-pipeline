@@ -78,7 +78,19 @@ const sync_inv_feed = async (run_log) => {
         record_count: response.value.length
       }, null);
 
-      // 3. Upload to SFTP
+      // 3. Upload to SFTP — unless explicitly skipped. Owner decision
+      // 2026-08-25: the vendor box currently has no key for us, and smoke
+      // runs must fetch + write CSVs WITHOUT sending anything. The skip is
+      // logged INFO (an intentional no-send is not an error).
+      if (process.env.SKIP_SFTP === "1") {
+        await addLogEvent(I, run_log, "sync_inv_feed", det, {
+          message: "SFTP upload skipped (SKIP_SFTP=1)",
+          local: localPath
+        }, null);
+        console.log(`SFTP upload skipped (SKIP_SFTP=1): ${localPath}`);
+        continue;
+      }
+
       const sftp = new SftpClient();
       try {
         await sftp.connect({
