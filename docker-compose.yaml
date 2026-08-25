@@ -21,6 +21,11 @@ services:
       # so ONE place decides the production identity. Dev runs pass it on the
       # command line. ':-' silences the compose WARN.
       RUN_USER: ${RUN_USER:-}
+      # Passthrough for smoke runs: SKIP_SFTP=1 on the host command line makes
+      # inv_feed_sync fetch + write CSVs without touching the vendor SFTP.
+      # Compose forwards only declared vars, so without this line the flag
+      # silently never reaches the container (verified the hard way).
+      SKIP_SFTP: ${SKIP_SFTP:-}
       NPM_CONFIG_CACHE: /tmp/.npm
       # Pin the local PG container. .env carries a commented-out Azure PROD
       # block whose keys feed the same `PGHOST || PG_HOST` fallback in both
