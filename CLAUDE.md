@@ -1,32 +1,28 @@
 # CLAUDE.md
 
-> ## ⚠️ MID-MIGRATION (started 2026-08-25) — read this first
->
-> **part-source-pipeline is being migrated to the fleet dev/release paradigm.**
-> The spec is `/opt/apps/data_acquisition/docs/migration_CLAUDE.md` (Part 1 =
-> conventions, Part 3 = migration checklist — the ONLY checklist; do not create
-> a rival one here). Reference implementations: **data_acquisition** (dev clone
-> `~/apps/data_acquisition`, pilot 2026-08-24) and **monday** (`~/apps/monday`,
-> 2026-08-25 — closer to this app in external-API/output-file shape). Until this
-> banner is removed, sections below may describe pre-migration state or the
-> target — each is labelled. When this file disagrees with the paradigm docs,
-> **the paradigm docs win**.
->
-> Migration state right now:
-> - `/opt/apps/part-source-pipeline` (this tree) is **frozen** — docs-only
->   commits, no code. It will be wiped and replaced by `build-release.sh`
->   output at cutover. The editable tree will be `~/apps/part-source-pipeline`.
-> - **The schedule is deliberately stopped** (by Matt, 2026-08-19; last
->   `hca_sync` run 17:00 UTC that day) **and STAYS stopped after this
->   migration** — owner decision 2026-08-25: do not restart `hca_sync`
->   (historical cadence: hourly at :00), `inv_feed_sync` is "not right now",
->   `send_csv_sftp` was never scheduled. Restarting any of them is an owner
->   decision, made by adding hardened entries to the shared svc crontab.
-> - `docs/run.md` describes the pre-migration run flow (npm ci into a shared
->   node_modules cache mount). It is superseded as migration commits land.
-
 **part-source-pipeline** (`APP_NAME=part_source_pipeline`, image `psp:*`) is a
 Node.js run-once job app: each invocation runs one named job and exits.
+
+**Migrated to the fleet dev/release paradigm 2026-08-25** (third app, after
+data_acquisition and monday). Conventions live in
+`/opt/apps/data_acquisition/docs/migration_CLAUDE.md` Part 1; this file is
+app-specific. The editable tree is `~/apps/part-source-pipeline` (branch
+`STAGING_docker`); `/opt/apps/part-source-pipeline` is build output produced
+ONLY by `build-release.sh` — never edit or commit there.
+
+## Schedule: deliberately DORMANT
+
+**There are no cron entries for this app, on purpose** (owner decision
+2026-08-25; the previous schedule was stopped by Matt 2026-08-19, last
+`hca_sync` run 17:00 UTC that day). The app is released and verified but not
+running. Reviving a job is an owner decision, done by adding hardened entries
+to the **shared svc crontab** (`sudo crontab -u svc -e`, cadence section,
+absolute paths, `flock -n`, `-T`, direct argv, bounded `.out` file — see the
+paradigm doc). Historical cadence if revived: `hca_sync` hourly at :00;
+`inv_feed_sync` unknown (no surviving record); `send_csv_sftp` never
+scheduled. A run appearing in `util.app_run_logs` with `RELEASE_SHA` =
+`dev-tree` means someone ran a dev tree; with a real SHA, someone ran the
+release copy by hand — both are fine, neither should be periodic.
 
 | Job (`node index.js <job>`) | What it does | State it touches |
 | --- | --- | --- |
@@ -44,9 +40,9 @@ transform, `RELEASE_SHA` stamp, builds `psp:svc` as svc), `preflight-check.sh`
 
 ## Run record
 
-Both sinks exist since commit `c0048b6` (2026-08-17, audit OPS-03), but **no
-scheduled run ever executed that code** — `util.app_run_logs` has zero
-`part_source_pipeline` rows as of 2026-08-25. Once runs happen:
+Every run writes both sinks (since `c0048b6`, audit OPS-03; the first-ever
+`util.app_run_logs` rows for this app are the 2026-08-25 migration smoke
+runs — `dev-tree` for dev, `68876cb` for the release round-trip):
 
 - `util.app_run_logs` row per run (vendored variant-B logger,
   `utils/logger/log.js`) — what ops-dashboard and incident-engine read.
