@@ -37,11 +37,13 @@ services:
       # retired; each copy (dev clone, release) owns its own deps.
       - ./:/workspace
 
-      # Centralized run logs. The hyphen/underscore difference is intentional:
-      # the host dir follows the repo name (part-source-pipeline), while the
-      # container path must match APP_NAME=part_source_pipeline because the
-      # logger writes to /opt/run-logs/${APP_NAME}/ (utils/logger/log.js).
-      - /opt/run-logs/part-source-pipeline:/opt/run-logs/part_source_pipeline
+      # Run logs. Host side is env-dependent and DEFAULTS TO THE DEV PATH so a
+      # missing LOG_DIR fails safe (never writes into /opt/run-logs); the
+      # release .env flips it via #RELEASE:LOG_DIR. The container path is
+      # fixed and matches APP_NAME=part_source_pipeline (underscore) because
+      # the logger writes to /opt/run-logs/${APP_NAME}/ (utils/logger/log.js);
+      # the host dir follows the repo name (hyphen) — intentional.
+      - ${LOG_DIR:-./utils/logger/logs}:/opt/run-logs/part_source_pipeline
     networks:
       - pg_net
 

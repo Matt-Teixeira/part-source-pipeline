@@ -13,18 +13,18 @@ const makeAppRunLog = async () => {
 
   // EXPRESS HTTP APP ISN'T EPHERMAL
   if (process.env.APP_NAME !== "express-http") {
-    switch (process.env.RUN_ENV) {
-      case "dev":
-        path = `./utils/logger/${process.env.APP_NAME}-log.${process.env.LOGGER}.${run_id}.json`;
-        break;
+    // ONE FIXED CONTAINER PATH; THE COMPOSE MOUNT DECIDES WHERE IT LANDS ON
+    // THE HOST (${LOG_DIR:-./utils/logger/logs} -> /opt/run-logs/${APP_NAME}).
+    // A MISSING LOG_DIR THEREFORE FAILS SAFE TO THE DEV TREE — THE OLD
+    // RUN_ENV SWITCH DEFAULTED INTO THE PRODUCTION RECORD INSTEAD.
+    // FILENAME TAG IS USER_ID: A NON-svc FILE IN /opt/run-logs MEANS SOMEONE
+    // RAN A DEV COMMAND AGAINST THE RELEASE COPY.
+    const dir = `/opt/run-logs/${process.env.APP_NAME}`;
+    path = `${dir}/${process.env.APP_NAME}-log.${process.env.USER_ID}.${run_id}.json`;
 
-      case "staging":
-        path = `/opt/run-logs/${process.env.APP_NAME}/${process.env.APP_NAME}-log.${process.env.LOGGER}.${run_id}.json`;
-        break;
-      default:
-        path = `/opt/run-logs/${process.env.APP_NAME}/${process.env.APP_NAME}-log.${process.env.LOGGER}.${run_id}.json`;
-        break;
-    }
+    // COVERS NON-DOCKER RUNS; THE DOCKER CASE (ROOT-OWNED BIND-MOUNT SOURCE)
+    // IS entrypoint.sh's JOB — A MOUNT ALWAYS EXISTS BY THE TIME NODE RUNS.
+    fs.mkdirSync(dir, { recursive: true });
 
     write_stream = fs.createWriteStream(path, {
       flags: "a",

@@ -51,14 +51,18 @@ scheduled run ever executed that code** — `util.app_run_logs` has zero
   **never regress to exit-0-on-error.** Known gap (documented in `index.js`):
   job layers umbrella-catch, so a totally failed job surfaces as partial/2.
 
-## Logging (pre-migration state — target is the `LOG_DIR` pattern)
+## Logging
 
-`utils/logger/log.js` switches on `RUN_ENV`: `dev` → `./utils/logger/`,
-anything else → `/opt/run-logs/${APP_NAME}/` (compose bind-maps host
-`/opt/run-logs/part-source-pipeline` — hyphen host / underscore container is
-intentional). File tag comes from `LOGGER`. Target state: fixed container
-path, `${LOG_DIR:-./utils/logger/logs}` mount that fails safe to the dev
-path, `#RELEASE:LOG_DIR` override, filename tag from `USER_ID`.
+`utils/logger/log.js` writes one fixed container path,
+`/opt/run-logs/part_source_pipeline/` (= `/opt/run-logs/${APP_NAME}/`,
+underscore). The compose mount decides where that lands on the host:
+`${LOG_DIR:-./utils/logger/logs}` — dev default in-tree (gitignored), release
+`#RELEASE:LOG_DIR=/opt/run-logs/part-source-pipeline` (hyphen host dir /
+underscore container path is intentional). A missing `LOG_DIR` fails safe to
+the dev path. Filename is `${APP_NAME}-log.${USER_ID}.${run_id}.json`, so a
+non-`svc` file in `/opt/run-logs` means someone ran a dev command against the
+release copy. `LOGGER='dev'` adds console error stacks + run stats; the file
+and DB sinks are unaffected by it. The old `RUN_ENV` path switch is gone.
 
 ## Known warts (kept deliberately — do not "fix" without owner sign-off)
 
