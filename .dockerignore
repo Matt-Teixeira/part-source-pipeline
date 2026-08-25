@@ -1,3 +1,5 @@
-node_modules
-.git
-*.log
+# Deny-by-default (fleet rule SEC-10): the Dockerfile COPYs only entrypoint.sh;
+# source arrives via bind mount at runtime. The build context stays KBs and can
+# never bake .env, .git, node_modules, or logs into an image or its cache.
+*
+!entrypoint.sh
