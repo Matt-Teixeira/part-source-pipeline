@@ -184,7 +184,9 @@ else
         *)    HCA_PROBE="${HCA_URI_V}?\$top=1" ;;
     esac
     B64="$(printf '%s:%s' "$PL_NAME_V" "$PL_PW_V" | base64 -w0)"
-    HCA_CODE=$(curl -sS --max-time 30 -o /tmp/psp-preflight-hca.$$ -w '%{http_code}' \
+    # 90s, not 30: Acumatica computes the full inquiry server-side BEFORE
+    # applying $top, so even a 1-row probe takes ~40s (measured 2026-08-25).
+    HCA_CODE=$(curl -sS --max-time 90 -o /tmp/psp-preflight-hca.$$ -w '%{http_code}' \
         -H "Accept: application/json" \
         -H @<(printf 'Authorization: Basic %s\n' "$B64") \
         "$HCA_PROBE" 2>&1)
