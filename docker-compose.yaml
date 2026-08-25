@@ -1,6 +1,8 @@
 services:
   app:
-    image: psp:${IMAGE_TAG}
+    # USER_ID drives the tag: psp:<username> for dev builds, psp:svc for the
+    # release copy (flipped by #RELEASE:USER_ID=svc at release time).
+    image: psp:${USER_ID}
     build:
       context: .
       # Host identity comes from .env so this file stays host-agnostic and the
@@ -15,15 +17,25 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      RUN_USER: svc
+      # Intentionally unset in .env: empty -> entrypoint.sh defaults to svc,
+      # so ONE place decides the production identity. Dev runs pass it on the
+      # command line. ':-' silences the compose WARN.
+      RUN_USER: ${RUN_USER:-}
       NPM_CONFIG_CACHE: /tmp/.npm
+      # Pin the local PG container. .env carries a commented-out Azure PROD
+      # block whose keys feed the same `PGHOST || PG_HOST` fallback in both
+      # pools; these pins mean an accidental uncomment can never repoint a
+      # containerized run at production (monday precedent).
+      PGHOST: pg_db
+      PGPORT: "5432"
+      PG_SSLMODE: require
     working_dir: /workspace
     volumes:
-      # Project source - live edits on host reflect in container
+      # Project source - live edits on host reflect in container. node_modules
+      # is IN-TREE (installed by build.sh as the host user), so it rides along
+      # in this mount — the shared /opt/resources/node_mod_cache mount is
+      # retired; each copy (dev clone, release) owns its own deps.
       - ./:/workspace
-
-      # Persistent node_modules cache (survives container removal)
-      - /opt/resources/node_mod_cache/part-source-pipeline:/workspace/node_modules
 
       # Centralized run logs. The hyphen/underscore difference is intentional:
       # the host dir follows the repo name (part-source-pipeline), while the
