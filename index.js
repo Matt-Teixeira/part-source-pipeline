@@ -120,9 +120,14 @@ const on_boot = async () => {
   // verbose_log->0->'note'->'argv'->>2. SAFE HERE (UNLIKE data_acquisition):
   // THIS APP NEVER INSERTED A SINGLE util.app_run_logs ROW BEFORE, SO THERE
   // IS NO EXISTING JOB-GRID SHARDING TO DISTURB.
+  // RELEASE_SHA IS STAMPED INTO THE DEPLOYED .env BY build-release.sh AND
+  // ABSENT IN A DEV TREE ('dev-tree' — NEVER undefined IN THE RECORD). A
+  // 'dev-tree' ROW APPEARING ON A SCHEDULE MEANS CRON RUNS THE WRONG COPY.
   let note = {
     job_type,
-    argv: process.argv
+    argv: process.argv,
+    USER_ID: process.env.USER_ID,
+    RELEASE_SHA: process.env.RELEASE_SHA || "dev-tree"
   };
 
   await addLogEvent(I, run_log, "on_boot", cal, note, null);
