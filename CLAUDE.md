@@ -31,8 +31,16 @@ Node.js run-once job app: each invocation runs one named job and exits.
 | Job (`node index.js <job>`) | What it does | State it touches |
 | --- | --- | --- |
 | `hca_sync` | Fetches 5 Acumatica OData endpoints (Basic auth, read-only GETs), inserts ONE row per run into `api.hca_odata` | Vendor API (read), staging DB (write) |
-| `inv_feed_sync` | Fetches 2 OData inventory feeds, writes `files/Avante_Biomed_Inventory.csv` + `files/Avante_Imaging_Inventory.csv`, uploads both to PartsSource's **production SFTP** | Vendor APIs (read), `files/` (write), vendor SFTP (**write**) |
+| `inv_feed_sync` | Fetches 2 OData inventory feeds, writes `files/Avante_Biomed_Inventory.csv` + `files/Avante_Imaging_Inventory.csv`, uploads both to PartsSource's **production SFTP** (`SKIP_SFTP=1` skips the upload) | Vendor APIs (read), `files/` (write), vendor SFTP (**write**) |
 | `send_csv_sftp` | Uploads `files/test.csv` (does not exist) | Test scaffolding — dead |
+
+## The 5-file pattern
+
+`build.sh` (in-tree deps + `psp:${USER_ID}` image), `build-release.sh`
+(clean-tree guard, tar mirror to `/opt/apps/part-source-pipeline`, `#RELEASE:`
+transform, `RELEASE_SHA` stamp, builds `psp:svc` as svc), `preflight-check.sh`
+(zero warnings = clean), `entrypoint.sh` (gosu drop, dir repair),
+`docker-compose.yaml`. See `docs/run.md` for the run commands.
 
 ## Run record
 
