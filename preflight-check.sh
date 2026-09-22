@@ -138,21 +138,25 @@ section "External services (authenticated checks)"
 # via `docker exec <pg_container> psql`: pg_hba trusts local and loopback, so
 # an exec'd psql succeeds with a deliberately WRONG password (that path hid a
 # rotated password for three weeks on a sibling app). This mirrors how the app
-# connects (both pools): PG_SSLMODE from .env (require on this host).
+# connects (both pools): PG_SSLMODE from .env, CA from PG_SSL_PATH
+# (verify-full on this host, so psql needs the same root cert the pool uses).
 PGHOST_V="$(env_val PGHOST)"; PGPORT_V="$(env_val PGPORT)"; PGUSER_V="$(env_val PGUSER)"
 PGPASSWORD_V="$(env_val PGPASSWORD)"; PGDATABASE_V="$(env_val PGDATABASE)"
 PG_SSLMODE_V="$(env_val PG_SSLMODE)"; PG_SSLMODE_V="${PG_SSLMODE_V:-require}"
+PG_SSL_PATH_V="$(env_val PG_SSL_PATH)"
 if [ -z "$PGPASSWORD_V" ]; then
     error "PGPASSWORD empty in .env — cannot verify PostgreSQL authentication"
+elif [ ! -r "$PG_SSL_PATH_V" ]; then
+    error "PG_SSL_PATH not readable ('${PG_SSL_PATH_V:-<unset>}') — skipping PostgreSQL check"
 elif ! docker image inspect postgres:16 >/dev/null 2>&1; then
     # An unverified check must never look like a passing one.
     warn "postgres:16 image absent — PostgreSQL auth NOT verified"
     info "Fix: docker pull postgres:16   (needed only for this check)"
 else
     PG_OUT=$(docker run --rm --network pg_net \
-        -e PGPASSWORD="$PGPASSWORD_V" -e PGSSLMODE="$PG_SSLMODE_V" \
+        -e PGPASSWORD="$PGPASSWORD_V" -e PGSSLMODE="$PG_SSLMODE_V" -e PGSSLROOTCERT=/ssl.crt \
         -e PGCONNECT_TIMEOUT=10 \
-        postgres:16 \
+        -v "$PG_SSL_PATH_V":/ssl.crt:ro postgres:16 \
         psql -h "$PGHOST_V" -p "$PGPORT_V" -U "$PGUSER_V" -d "$PGDATABASE_V" \
              -tAc "SELECT 'ok'" 2>&1)
     if [ "$(echo "$PG_OUT" | tail -1 | tr -d '[:space:]')" = "ok" ]; then

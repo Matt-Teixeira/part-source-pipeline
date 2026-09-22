@@ -33,7 +33,8 @@ services:
       # containerized run at production (monday precedent).
       PGHOST: pg_db
       PGPORT: "5432"
-      PG_SSLMODE: require
+      PG_SSLMODE: verify-full
+      PG_SSL_PATH: /opt/resources/ssl/pg_ssl.crt
     working_dir: /workspace
     volumes:
       # Project source - live edits on host reflect in container. node_modules
@@ -41,6 +42,10 @@ services:
       # in this mount — the shared /opt/resources/node_mod_cache mount is
       # retired; each copy (dev clone, release) owns its own deps.
       - ./:/workspace
+
+      # PostgreSQL server certificate (read-only). PG_SSLMODE=verify-full
+      # reads it at PG_SSL_PATH; the pool fails closed if it is missing.
+      - /opt/resources/ssl:/opt/resources/ssl:ro
 
       # Run logs. Host side is env-dependent and DEFAULTS TO THE DEV PATH so a
       # missing LOG_DIR fails safe (never writes into /opt/run-logs); the
