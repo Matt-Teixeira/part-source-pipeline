@@ -81,8 +81,9 @@ and DB sinks are unaffected by it. The old `RUN_ENV` path switch is gone.
 - **Commented-out Azure PROD block in `.env`** (`PG_HOST=prod-...azure...`).
   Inactive (keys absent, so the `PGHOST || PG_HOST` fallback in both pools
   cannot fire). Keep commented; never uncomment on this host.
-- **`PGUSER=postgres`** — superuser. Per-app role migration is a separate
-  tracked fleet effort (3/10 done), not part of this migration.
+- **`PGUSER=part_source_pipeline_rw`** — the app's own role (member of the shared
+  group `apps_rw`, not a superuser; server runbook 4.0.4). Neither pool file
+  (`utils/db/pg-pool.js`, `db/pgPool.js`) has a default user.
 - **`utils/` is the shared-era museum** (alert-processor/alert-notify/mmb-rpp/
   odd-jobs SQL, `vpn/`, `units/`, `pg-pool copy.js`, `pg-helpers_hhm.js`).
   Only `utils/logger/` and `utils/db/` are live for this app. Cleanup is
@@ -97,10 +98,11 @@ Two pools, both live at require-time (see `index.js` header comment):
 with `PG_*` fallbacks. `PG_SSLMODE=require` (encrypted, no CA verify —
 verify-full is part of the future role migration, not this one).
 
-Rotation: registered in `/opt/resources/scripts/rotate-envs-20260817.sh`
-(matches on value = data_acquisition's `PGPASSWORD`; rewrites both
-`/opt/apps/part-source-pipeline/.env` and `~/apps/part-source-pipeline/.env`).
-Verified in-list and value-matched 2026-08-25.
+PostgreSQL password: root-only `/root/part_source_pipeline_rw_pw`.
+`pg_manage_v2/db/roles/apply-app-role.sh part-source-pipeline` writes `PGUSER`/
+`PGPASSWORD` into the clone's `.env` (`--rotate`, `--rollback`); `build-release.sh`
+carries them to the release copy. Never paste it by hand. There is no rotation
+script on the dev server.
 
 ## Environment variables
 
