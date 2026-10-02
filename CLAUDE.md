@@ -6,8 +6,8 @@ Node.js run-once job app: each invocation runs one named job and exits.
 **Migrated to the fleet dev/release paradigm 2026-08-25** (third app, after
 data_acquisition and monday). Conventions live in
 `/opt/apps/data_acquisition/docs/migration_CLAUDE.md` Part 1; this file is
-app-specific. The editable tree is `~/apps/part-source-pipeline` (branch
-`STAGING_docker`); `/opt/apps/part-source-pipeline` is build output produced
+app-specific. The editable tree is `~/apps/part-source-pipeline` (branch by
+environment: `DEV_docker` on a dev server, `STAGING_docker` on staging); `/opt/apps/part-source-pipeline` is build output produced
 ONLY by `build-release.sh` — never edit or commit there.
 
 ## Schedule: deliberately DORMANT
