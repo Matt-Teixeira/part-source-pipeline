@@ -34,9 +34,15 @@ release copy by hand — both are fine, neither should be periodic.
 
 `build.sh` (in-tree deps + `psp:${USER_ID}` image), `build-release.sh`
 (clean-tree guard, tar mirror to `/opt/apps/part-source-pipeline`, `#RELEASE:`
-transform, `RELEASE_SHA` stamp, builds `psp:svc` as svc), `preflight-check.sh`
-(zero warnings = clean), `entrypoint.sh` (gosu drop, dir repair),
-`docker-compose.yaml`. See `docs/run.md` for the run commands.
+transform, `RELEASE_SHA` + `RELEASE_AT` stamp, builds `psp:svc` as svc),
+`preflight-check.sh` (zero warnings = clean), `entrypoint.sh` (gosu drop, dir
+repair), `docker-compose.yaml`. See `docs/run.md` for the run commands.
+
+`RELEASE_SHA` and `RELEASE_AT` (UTC, `YYYY-MM-DDTHH:MM:SSZ`, for the
+orchestrator's release-drift view) are injected into the deployed `.env` by
+`build-release.sh` — never set them by hand; dev runs log `dev-tree` and a dev
+`.env` has neither. Preflight warns when the release `.env` has `RELEASE_SHA`
+but no (or a malformed) `RELEASE_AT`: re-release.
 
 ## Run record
 
