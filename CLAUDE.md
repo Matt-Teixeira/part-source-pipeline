@@ -50,7 +50,7 @@ Every run writes both sinks (since `c0048b6`, audit OPS-03; the first-ever
 `util.app_run_logs` rows for this app are the 2026-08-25 migration smoke
 runs — `dev-tree` for dev, `68876cb` for the release round-trip):
 
-- `util.app_run_logs` row per run (vendored variant-B logger,
+- `util.app_run_logs` row per run (fleet master logger,
   `utils/logger/log.js`) — what ops-dashboard and incident-engine read.
 - Per-run JSON file log (see *Logging* below for paths).
 - **`run_outcome/v1` exit-code contract** — terminal `run_outcome` event
@@ -63,16 +63,24 @@ runs — `dev-tree` for dev, `68876cb` for the release round-trip):
 
 ## Logging
 
-`utils/logger/log.js` writes one fixed container path,
-`/opt/run-logs/part_source_pipeline/` (= `/opt/run-logs/${APP_NAME}/`,
-underscore). The compose mount decides where that lands on the host:
-`${LOG_DIR:-./utils/logger/logs}` — dev default in-tree (gitignored), release
-`#RELEASE:LOG_DIR=/opt/run-logs/part-source-pipeline` (hyphen host dir /
-underscore container path is intentional). A missing `LOG_DIR` fails safe to
-the dev path. Filename is `${APP_NAME}-log.${USER_ID}.${run_id}.json`, so a
-non-`svc` file in `/opt/run-logs` means someone ran a dev command against the
-release copy. `LOGGER='dev'` adds console error stacks + run stats; the file
-and DB sinks are unaffected by it. The old `RUN_ENV` path switch is gone.
+`utils/logger/log.js` is the **fleet master logger**, copied VERBATIM from
+data_acquisition (byte-identical across the fleet; with `log.test.js`, run
+`node --test utils/logger/log.test.js` in the container — the host has no
+node). Never edit it here: change the master, then re-copy. It reads only
+`APP_NAME`, `USER_ID` and `LOGGER_MODE`, and writes to `./utils/logger/logs`
+relative to the working dir — `/workspace/utils/logger/logs` in the container
+(fleet standard container path). The compose mount decides where that lands
+on the host: `${LOG_DIR:-./utils/logger/logs}` — dev default in-tree
+(gitignored), release `#RELEASE:LOG_DIR=/opt/run-logs/part-source-pipeline`
+(hyphen host dir, svc:docker 2775). A missing `LOG_DIR` fails safe to the dev
+path. Filename is `${APP_NAME}-log.${USER_ID}.<New York start stamp>.json`,
+e.g. `part_source_pipeline-log.svc.2026-10-29T08-50-51.694-0400.json`; the
+`run_id` stays a UUID inside events and the DB row. A non-`svc` file in
+`/opt/run-logs` means someone ran a dev command against the release copy.
+`LOGGER_MODE=log_and_console` (dev) adds console output; `#RELEASE:LOGGER_MODE=log`
+in the release. The file and DB sinks are unaffected by it. The old `RUN_ENV`
+path switch, the `/opt/run-logs/${APP_NAME}` container path and `LOGGER` are
+gone (preflight warns on a leftover `LOGGER`).
 
 ## Known warts (kept deliberately — do not "fix" without owner sign-off)
 

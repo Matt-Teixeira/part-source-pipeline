@@ -199,9 +199,9 @@ const on_boot = async () => {
 
     // 2) APPEND TERMINAL run_outcome EVENT (type INFO ON PURPOSE: IT MUST
     //    NEVER LAND IN warn_error_logs -- ops-dashboard DERIVES STATUS AND
-    //    incident-engine MATERIALIZES INCIDENTS FROM THAT COLUMN). THIS
-    //    APP'S VENDORED LOGGER (VARIANT B) HAS NO addRunSummary; THE
-    //    OUTCOME EVENT IS STILL LAST AND CARRIES A VALID dt FOR ended_at.
+    //    incident-engine MATERIALIZES INCIDENTS FROM THAT COLUMN). THE
+    //    FLEET LOGGER EXPORTS addRunSummary BUT THIS APP DOES NOT CALL IT;
+    //    THE OUTCOME EVENT IS STILL LAST AND CARRIES A VALID dt FOR ended_at.
     await addLogEvent(I, run_log, "run_outcome", det, outcome, null);
 
     // 3) PERSIST THE SELF-LOG, DB FIRST THEN DISK (DISK CAPTURES ANY DB-INSERT

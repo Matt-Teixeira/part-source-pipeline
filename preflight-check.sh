@@ -46,7 +46,10 @@ if [ -d "$LOG_DIR_V" ] && [ -w "$LOG_DIR_V" ]; then
 elif [ -d "$LOG_DIR_V" ]; then
     error "LOG_DIR $LOG_DIR_V exists but is not writable by $(id -un) ($(stat -c '%U:%G %a' "$LOG_DIR_V"))"
 else
-    warn "LOG_DIR $LOG_DIR_V missing (entrypoint.sh creates+chowns it on first docker run)"
+    case "$LOG_DIR_V" in
+        /opt/run-logs/*) error "LOG_DIR $LOG_DIR_V does not exist — create it svc:docker 2775 before the first release run" ;;
+        *) warn "LOG_DIR $LOG_DIR_V missing (entrypoint.sh creates+chowns it on first docker run)" ;;
+    esac
 fi
 
 # ------------------------------------------------------------------- 2. docker
@@ -73,7 +76,7 @@ section ".env"
 if [ ! -f .env ]; then
     error ".env missing — copy .env.example and fill it in"
 else
-    REQUIRED="APP_NAME USER_ID LOGGER LOG_DIR
+    REQUIRED="APP_NAME USER_ID LOGGER_MODE LOG_DIR
               PGHOST PGPORT PGUSER PGPASSWORD PGDATABASE PG_SSLMODE
               PROD_LOGIN_NAME PROD_LOGIN_PW
               HCA_URI HCA_TECH HCA_INVOICE HCA_CONTRACT_DETAILS HCA_SRV_ORDER_DETAILS
@@ -92,13 +95,18 @@ else
         fi
     done
 
-    # The logger builds its container write path from APP_NAME; the compose
-    # mount hardcodes the matching container dir. A drifted value writes logs
-    # outside the mount, i.e. into the container's ephemeral filesystem.
+    # APP_NAME names the run-log files and the util.app_run_logs rows that
+    # ops-dashboard / incident-engine key on. A drifted value splits the record.
     APP_NAME_V="$(env_val APP_NAME)"
     if [ -n "$APP_NAME_V" ] && [ "$APP_NAME_V" != "part_source_pipeline" ]; then
-        error ".env: APP_NAME='$APP_NAME_V' — must be part_source_pipeline (underscore; the logger's mount path)"
+        error ".env: APP_NAME='$APP_NAME_V' — must be part_source_pipeline (underscore; run-log file + DB row name)"
     fi
+
+    LOGGER_MODE_V="$(env_val LOGGER_MODE)"
+    case "$LOGGER_MODE_V" in
+        log|log_and_console|"") : ;;   # empty is reported by the REQUIRED loop
+        *) error ".env: LOGGER_MODE must be 'log' or 'log_and_console' (got '$LOGGER_MODE_V')" ;;
+    esac
 
     # PGHOST empty is worse than missing: both pools fall back PGHOST -> PG_HOST,
     # and this .env keeps a commented-out Azure PROD block someone could
@@ -108,7 +116,7 @@ else
         error ".env: PGHOST empty while PG_HOST is set — the pools would silently target PG_HOST ($(env_val PG_HOST))"
     fi
 
-    for retired in IMAGE_TAG RUN_USER RUN_ENV; do
+    for retired in IMAGE_TAG RUN_USER RUN_ENV LOGGER; do
         grep -q "^$retired=" .env && warn ".env: retired key $retired still present — remove it (see .env.example)"
     done
 fi
